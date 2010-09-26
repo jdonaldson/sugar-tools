@@ -6,12 +6,6 @@ import haxe.macro.Expr.Position;
 import haxe.macro.Expr.ExprDef;
 
 class MacroFast {	
-	public static function main(){
-		var y = construct('assets/simple.xml');
-		// generate a --display completion below...
-		trace(y.node.body);
-	}
-	
 	@:macro public static function construct(expr:Expr) : Expr {
 		var file_name:String;
 		var error_msg = 'This function requires a bare string giving the xml file name';
