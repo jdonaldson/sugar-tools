@@ -1,0 +1,5 @@
+#build file
+-cp src
+-main org.sugar.macro.MacroFast
+-neko bin/Demo.n
+-cmd neko bin/Demo
