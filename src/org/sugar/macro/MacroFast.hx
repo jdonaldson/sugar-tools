@@ -43,7 +43,7 @@ class MacroFast {
 /**
  * Creates an object declaration from a file reference given as a constant string. 
  */
-	@:macro public static function fromFile(expr:Expr) : Expr {
+	@:macro public static function parseFile(expr:Expr) : Expr {
 		var file_name:String;
 		var error_msg = 'This function requires a constant string giving the xml file name';
 		switch(expr.expr){
@@ -61,7 +61,7 @@ class MacroFast {
 /**
  * Creates an object declaration from a constant string.
  */	
-	@:macro public static function fromCString(expr:Expr) : Expr {
+	@:macro public static function parseString(expr:Expr) : Expr {
 		var xml:String;
 		var error_msg = 'This function requires a constant string describing the xml';
 		switch(expr.expr){
