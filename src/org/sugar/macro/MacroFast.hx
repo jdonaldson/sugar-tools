@@ -1,11 +1,45 @@
+/*
+ * Copyright (c) 2009, Justin Donaldson and The haXe Project Contributors
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *   - Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   - Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE HAXE PROJECT CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE HAXE PROJECT CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ */
+
 package org.sugar.macro;
 import haxe.macro.Expr;
 import haxe.macro.Context;
 import neko.io.File;
 import haxe.macro.Expr.Position;
 import haxe.macro.Expr.ExprDef;
+using org.sugar.tools.HashTools;
+using org.sugar.tools.ListTools;
+#if macro
+using org.sugar.macro.MacroFast.MacroHelper;
+#end
 
+/**
+ *  A utility class for reading in an xml file as a single object declaration.
+ */
 class MacroFast {	
+	
 	@:macro public static function construct(expr:Expr) : Expr {
 		var file_name:String;
 		var error_msg = 'This function requires a bare string giving the xml file name';
@@ -17,118 +51,85 @@ class MacroFast {
 					case CString(s) : file_name = s;
 				}
 		}
-		   
 			var fh = File.getContent(file_name);
 			var n = Xml.parse(fh);
-			var o:ExprDef = child2exprdef(n.firstChild());
-			var result = {
-				expr:o,
-				pos:Context.currentPos()
-			}
-			return result;
+			return child2expr(n.firstChild());
 	}
 	#if macro
-	private static function att2fieldexpr(name:String, val:String) :{field:String, expr:Expr}{
-		var pos = haxe.macro.Context.currentPos();
-		var expr:Expr = {
-			expr:EConst(CString(val)),
-			pos:pos
-		}
-		var result:{field:String, expr:Expr} = {
-			field:name,
-			expr:expr
-		}	
-		return result;
-	}
 	
-	private static function str2expr(s:String,pos:Position) : Expr {
-		var exprdef = EConst(CString(s));
-		return{ expr:exprdef, pos:pos}
-	}
+	private static function child2expr(x:Xml) : Expr{
+		var pos = Context.currentPos();
+		var fields = new Array<ObjField>();
+		
+		var nodeType = function(x:Xml){return Std.string(x.nodeType);}
+		var children = x.groupByHash(nodeType);
+		
 	
-	
-	
-	private static function atts2EObjectDecl(xml:Xml) : {field:String, expr:Expr} {
-		var pos = haxe.macro.Context.currentPos();
-		var fields = new Array<{field:String, expr:Expr}>();
-		var att_fields = new Array<{field:String, expr:Expr}>();
-		for (a in xml.attributes()){
-			trace(a);
-			var result = {
-				field:a,
-				expr:str2expr(xml.get(a), pos)
+		for (c in children.keys()){
+			switch(c){
+				default: continue;
+				case 'element': {
+					var nodeName = function(x:Xml){ return Std.string(x.nodeName); }
+					var els = children.get(c).groupByHash(nodeName);
+					var childmap = function(name:String) { 
+						return child2expr(els.get(name).first()).toField(name);		
+					}
+					var node = EObjectDecl(els.keys().mapIter(childmap).array()).toExpr(pos).toField('node');	
+					fields.push(node);
+					
+					var nodesmap = function(name:String){
+						return EArrayDecl(els.get(name).map(child2expr).array()).toExpr(pos).toField(name);
+					}
+					
+					var nodes = EObjectDecl(els.keys().mapIter(nodesmap).array()).toExpr(pos).toField('nodes');
+					fields.push(nodes);
+					
+					var child2expr = function(c:Xml){ return child2expr(c); }
+					var vals = children.get(c).map(child2expr).array();
+					var elements = EArrayDecl(vals).toExpr(pos).toField('elements');
+					fields.push(elements);
+					
+				}
+				case 'pcdata':{
+					var str = children.get(c).join('');
+					fields.push(EConst(CString(str)).toExpr(pos).toField('innerData'));
+				}
 			}
-			att_fields.push(result);
+		}
+		var str2Expr = function(name:String) : ObjField{
+			return EConst(CString(x.get(name))).toExpr(pos).toField(name);
+		}
+		if (x.attributes().hasNext()){
+			var att = EObjectDecl(x.attributes().mapIter(str2Expr).array()).toExpr(pos).toField('att');
+			fields.push(att);
 		}
 		
-		var eobj = {
-			expr:EObjectDecl(att_fields),
-			pos:pos
-		}
-		
-		return { field:'att', expr: eobj};
-	}
-	
-	private static function children2EObjectDecl(xml:Xml) : {field:String, expr:Expr} {
-		var pos = haxe.macro.Context.currentPos();
-		var fields = new Array<{field:String, expr:Expr}>();
-		var c_fields = new Array<{field:String, expr:Expr}>();
-		for (e in xml.elements()){
-			var expr = {
-				expr:child2exprdef(e),
-				pos:pos
-			}
-			
-			
-			var result = {
-				field:e.nodeName,
-				expr:expr
-			}
-			c_fields.push(result);
-		}
-		
-		var eobj = {
-			expr:EObjectDecl(c_fields),
-			pos:pos
-		}
-		
-		return { field:'node', expr: eobj};
-	}
-	
-	
-	private static function child2exprdef(x:Xml) : ExprDef{
-		var fields = new Array<{field:String, expr:Expr}>();
-		var pos = haxe.macro.Context.currentPos();
-		var content_node = false;
-		if (x.attributes().hasNext()) { 
-			fields.push(atts2EObjectDecl(x));
-			content_node = true;
-		}
-		if (x.elements().hasNext()) {
-			fields.push(children2EObjectDecl(x));
-			content_node = true;
-		}
-		var result:ExprDef;
-		
-		if (! content_node){
-			var node_val = x.firstChild().nodeValue;
-			result = EConst(CString(node_val));
-		} else {
-			result = EObjectDecl(fields);
-		}
-
-		return result;
+		return EObjectDecl(fields).toExpr(pos);
 	}
 	#end
 }
 
 
+#if macro
 
-//simple.xml, taken from some xml tutorial site because I am lazy
-/*<note>
-<to>Tove</to>
-<from>Jani</from>
-<heading>Reminder</heading>
-<body>Don't forget me this weekend!</body>
-</note>*/
+typedef ObjField = { field:String, expr:Expr }
 
+/**
+ *  simple functions to ease the creation of macro related enums.
+ */
+class MacroHelper{
+	public static function toExpr(exprdef:ExprDef, pos:Position){
+		return{
+			expr:exprdef,
+			pos:pos
+		}
+	}
+	public static function toField(expr:Expr, field:String){
+		return{
+			field:field,
+			expr:expr
+		}
+	}
+	
+}
+#end
