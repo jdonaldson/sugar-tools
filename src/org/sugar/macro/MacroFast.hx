@@ -40,7 +40,10 @@ using org.sugar.macro.MacroFast.MacroHelper;
  */
 class MacroFast {	
 	
-	@:macro public static function construct(expr:Expr) : Expr {
+/**
+ * Creates an object declaration from a file reference given as a string. 
+ */
+	@:macro public static function fromFile(expr:Expr) : Expr {
 		var file_name:String;
 		var error_msg = 'This function requires a bare string giving the xml file name';
 		switch(expr.expr){
@@ -55,8 +58,28 @@ class MacroFast {
 			var n = Xml.parse(fh);
 			return child2expr(n.firstChild());
 	}
+/**
+ * Creates an object declaration from a constant string.
+ */	
+	@:macro public static function fromCString(expr:Expr) : Expr {
+		var xml:String;
+		var error_msg = 'This function requires a bare string giving the xml file name';
+		switch(expr.expr){
+			default : Context.error(error_msg, Context.currentPos());
+			case EConst(c) : 
+				switch(c) {
+					default : Context.error(error_msg, Context.currentPos());
+					case CString(s) : var xml = s;
+				}
+		}
+		return child2expr(Xml.parse(xml).firstChild());
+	}
+	
 	#if macro
 	
+/**
+ *  The helper function that handles the recursive building of the object declaration.
+ */
 	private static function child2expr(x:Xml) : Expr{
 		var pos = Context.currentPos();
 		var fields = new Array<ObjField>();

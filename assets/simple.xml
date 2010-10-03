@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!-- Edited by XMLSpy® -->
-<catalog>
+<catalog foo="an attribute!">
 	<cd>
 		<title>Empire Burlesque</title>
 		<artist>Bob Dylan</artist>
