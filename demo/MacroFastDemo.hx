@@ -1,4 +1,4 @@
-import org.sugar.macro.MacroFast;
+import org.sugar.xml.MacroFast;
 class MacroFastDemo {
 	public static function main(){
 		var y = MacroFast.parseFile('assets/simple.xml');
