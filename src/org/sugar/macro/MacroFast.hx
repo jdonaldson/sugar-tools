@@ -41,11 +41,11 @@ using org.sugar.macro.MacroFast.MacroHelper;
 class MacroFast {	
 	
 /**
- * Creates an object declaration from a file reference given as a string. 
+ * Creates an object declaration from a file reference given as a constant string. 
  */
 	@:macro public static function fromFile(expr:Expr) : Expr {
 		var file_name:String;
-		var error_msg = 'This function requires a bare string giving the xml file name';
+		var error_msg = 'This function requires a constant string giving the xml file name';
 		switch(expr.expr){
 			default : Context.error(error_msg, Context.currentPos());
 			case EConst(c) : 
@@ -63,7 +63,7 @@ class MacroFast {
  */	
 	@:macro public static function fromCString(expr:Expr) : Expr {
 		var xml:String;
-		var error_msg = 'This function requires a bare string giving the xml file name';
+		var error_msg = 'This function requires a constant string describing the xml';
 		switch(expr.expr){
 			default : Context.error(error_msg, Context.currentPos());
 			case EConst(c) : 
@@ -87,7 +87,6 @@ class MacroFast {
 		var nodeType = function(x:Xml){return Std.string(x.nodeType);}
 		var children = x.groupByHash(nodeType);
 		
-	
 		for (c in children.keys()){
 			switch(c){
 				default: continue;
