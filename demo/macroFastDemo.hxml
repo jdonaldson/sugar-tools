@@ -4,3 +4,4 @@
 -main MacroFastDemo
 -neko bin/Demo.n
 -cmd neko bin/Demo
+# -D sugarlist
