@@ -1,0 +1,5 @@
+-main AsyncDemo
+-cp src
+-cp demo
+-x bin/AsyncDemo
+
