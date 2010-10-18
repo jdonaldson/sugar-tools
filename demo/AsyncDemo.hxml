@@ -1,4 +1,4 @@
--main AsyncDemo
+-main AsyncDemo2
 -cp src
 -cp demo
 -x bin/AsyncDemo
