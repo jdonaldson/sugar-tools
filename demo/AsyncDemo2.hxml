@@ -1,0 +1,7 @@
+-main AsyncDemo2
+-cp src
+-cp demo
+-swf9 bin/AsyncDemo2.swf
+# -x bin/ad
+#-cmd open bin/AsyncDemo2.swf
+# @tm-preview
