@@ -1,26 +1,27 @@
 using org.sugar.Async;
 import  org.sugar.Async;
-/*import flash.events.MouseEvent;
-import flash.events.Event;*/
+import flash.events.MouseEvent;
+import flash.events.Event;
 class AsyncDemo2 {
 	static var localX = new Async<Float>();
 	static var localY = new Async<Float>();
 	static var localFoo = new Async<Float>();
+	static var bar = new Async<MouseEvent>();
 	public static function main(){
-/*		flash.Lib.current.stage.addEventListener(MouseEvent.CLICK,clickListener);*/
-		doX.wait(localX);
-		doY.wait(localY);
-		
-		var t = new haxe.Timer(5000);
-		t.run = foo;
-		var k = new flash.utils.SetIntervalTimer();
-	
-		localX.yield(1);
-		
-		trace('hi');	
-		
+		flash.Lib.current.stage.addEventListener(MouseEvent.CLICK, bar.yield);
+		bar1.wait(bar);
+		trace("hi'");
+
+
 	}
 
+	
+	
+	public static function bar1(x:MouseEvent){
+		trace(x);
+		bar.removeWait(bar1);
+	}
+	
 	
 	public static function doX(x:Float){
 
@@ -30,7 +31,7 @@ class AsyncDemo2 {
 	
 	public static function doY(y:Float){
 		trace("y: " + Std.string(y)); 
-		localX.yield(y);
+/*		localX.yield(y);*/
 	}
 	
 	public static function doXY(x:Float, y:Float ){
@@ -44,3 +45,4 @@ class AsyncDemo2 {
 	}
 	
 }
+
