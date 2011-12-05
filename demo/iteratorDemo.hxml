@@ -1,0 +1,5 @@
+-main IteratorDemo
+-cp demo
+-cp src
+-x bin/IteratorDemo.n
+#-cmd neko bin/IteratorDemo.n
