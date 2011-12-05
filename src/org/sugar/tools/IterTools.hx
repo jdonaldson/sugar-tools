@@ -780,13 +780,14 @@ class StoredIterator<A>{  // extends Iterable
 		else if (finished ) return stored_arr.iterator(); // completely stored Iterator
 		else{ 
 				started = true;
+				var t = this;
 				return cast {
 					itr:itr,
 					stored_arr:stored_arr,
-					hasNext : function() return untyped this.itr.hasNext(),
+					hasNext : function() return untyped t.itr.hasNext(),
 					next : function() {
-						var ret_val = untyped this.itr.next();
-						untyped this.stored_arr.push(ret_val);
+						var ret_val = untyped t.itr.next();
+						untyped t.stored_arr.push(ret_val);
 						return ret_val;
 					}
 				}
